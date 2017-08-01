@@ -1,4 +1,5 @@
 import re
+import os
 import time
 import scrapy
 import ConfigParser
@@ -16,10 +17,9 @@ class RCSpider(scrapy.Spider):
 	start_urls = ["https://secure.remindercall.com/login"]
 
 	config = ConfigParser.ConfigParser()
-	section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+	section = config.read("config.ini")
 
-	password_ = config.get('REMINDER','password')
-	login_ = config.get('REMINDER','username')
+	chrome_path = config.get('CHROME','path')
 
 	# def __init__(self):
 	#     """
@@ -39,7 +39,8 @@ class RCSpider(scrapy.Spider):
 		:param data: response
 		:return:
 		"""
-		driver = webdriver.Chrome(executable_path=r'/home/sayone/Downloads/chromedriver')
+		project_path = os.path.dirname(os.path.abspath(__file__))+'/chromedriver'
+		driver = webdriver.Chrome(executable_path=project_path)
 		url = 'https://secure.remindercall.com/login'
 		driver.get(url)
 		time.sleep(2)

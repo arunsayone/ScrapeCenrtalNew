@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 from oauth2client.service_account import ServiceAccountCredentials
 
 config = ConfigParser.ConfigParser()
-section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+section = config.read("config.ini")
 
 server = config.get('DATABASE','server')
 username = config.get('DATABASE','username')

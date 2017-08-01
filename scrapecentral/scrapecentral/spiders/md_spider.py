@@ -12,7 +12,7 @@ class MDSpider(scrapy.Spider):
     start_urls = ["https://www.marijuanadoctors.com/user/practice/index"]
 
     config = ConfigParser.ConfigParser()
-    section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+    section = config.read("config.ini")
 
     login_user = config.get('DOCTORS','username')
     login_pass = config.get('DOCTORS','password')

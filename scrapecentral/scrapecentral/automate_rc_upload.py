@@ -1,3 +1,4 @@
+import os
 import time
 import datetime
 import ConfigParser
@@ -9,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 class AutomateRC(object):
 
     config = ConfigParser.ConfigParser()
-    section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+    section = config.read("config.ini")
 
     login = config.get('REMINDER','username')
     password = config.get('REMINDER','password')
@@ -23,7 +24,9 @@ class AutomateRC(object):
         :param data:
         :return:
         """
-        driver = webdriver.Chrome(executable_path=r'/home/sayone/Downloads/chromedriver')
+        project_path = os.path.dirname(os.path.abspath(__file__))+'/chromedriver'
+        upload_path = os.path.dirname(os.path.abspath(__file__))+'/UploadRC1.xlsx.xlsx'
+        driver = webdriver.Chrome(executable_path=project_path)
         url = 'https://secure.remindercall.com/login'
         driver.get(url)
         time.sleep(2)
@@ -46,7 +49,7 @@ class AutomateRC(object):
             driver.find_element_by_partial_link_text("1: Upload").click();
             time.sleep(2)
             driver.find_element_by_css_selector('input[type="file"]').clear()
-            driver.find_element_by_css_selector('input[type="file"]').send_keys(r"/home/sayone/Downloads/UploadRC1.xlsx.xlsx")
+            driver.find_element_by_css_selector('input[type="file"]').send_keys(upload_path)
             time.sleep(2)
             driver.find_element_by_xpath("//input[@type='submit' and @value='Send File']").click()
             time.sleep(2)
@@ -68,7 +71,7 @@ class AutomateRC(object):
             time.sleep(2)
             driver.quit();
 
-            print 'We are not queueing the calls now..........hi..hi..'
+            print 'We are not queueing the calls now.......'
             driver.quit();
             # driver.find_element_by_xpath(".//button[text()='Queue Calls Now']").click()
 

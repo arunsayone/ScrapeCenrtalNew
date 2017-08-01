@@ -17,7 +17,7 @@ class PFDownloadSpider(scrapy.Spider):
 	start_urls = ["https://static.practicefusion.com/apps/ehr/?c=1385407302#/login"]
 
 	config = ConfigParser.ConfigParser()
-	section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+	section = config.read("config.ini")
 
 	password_ = config.get('FUSION','password')
 	login_ = config.get('FUSION','username')
