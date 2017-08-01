@@ -234,10 +234,10 @@ class MDSpider(scrapy.Spider):
 
         # The Patient is a current NY Resident
         ny_resident = doc.xpath('//div[@class="patient-details"]/div/dl/dl/h4[text()="The Patient is a current NY Resident"]')
-        address1 = ny_resident[0].xpath('./following-sibling::p/text()')[0]
-        item['address1'] = address1
+        if ny_resident:
+            address1 = ny_resident[0].xpath('./following-sibling::p/text()')[0]
+            item['address1'] = address1
 
-        print '\n\n\n patient details\n\n\n',patient_details[0],'....', f_name,'\n\n\n\n'
         location = patient_details[0].xpath('./following-sibling::dl[1]/dd/text()')[6]
         if location:
             address_data = location.split(',')
