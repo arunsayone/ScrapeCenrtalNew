@@ -1,39 +1,27 @@
 import re
-import csv
 import json
 import time
 import scrapy
 import poplib
+import urllib
 import logging
 import requests
+import ConfigParser
 
 from datetime import datetime
-from lxml import html
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-
-from scrapy.http import FormRequest
-from scrapecentral.items import ScrapecentralItem
-
-import pyodbc
-import sqlalchemy
-import urllib
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, mapper, sessionmaker
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -47,13 +35,14 @@ class PFEntrySpider(scrapy.Spider):
 	name = "pf_entry"
 	domain = "http://www.practicefusion.com/"
 	start_urls = ["https://static.practicefusion.com/apps/ehr/?c=1385407302#/login"]
-	password_ = 'pA142*2@'
-	login_ = '2m@doctormm.com'
+
+	password_ = config.get('FUSION','password')
+	login_ = config.get('FUSION','username')
 
 	# gmail account details
-	server = "pop.gmail.com"
-	user  = "Tester@medwiser.org"
-	password = "4r6&^jhg&U"
+	server = config.get('GMAIL','server')
+	user  = config.get('GMAIL','username')
+	password = config.get('GMAIL','password')
 
 	def parse(self, response):
 
@@ -76,7 +65,6 @@ class PFEntrySpider(scrapy.Spider):
 
 		response = requests.request("POST", login_url, data=json.dumps(payload), headers=headers)
 		data = json.loads(response.text)
-		print '...\n',data["details"]["fauxSessionToken"]
 		session_token = data["details"]["fauxSessionToken"]
 
 		#send otp
@@ -89,12 +77,10 @@ class PFEntrySpider(scrapy.Spider):
 			}
 
 		send_otp_response = requests.request("POST", send_otp_url, data=json.dumps(send_otp_payload), headers=send_otp_headers)
-		print'..Code..',(send_otp_response.status_code)
 		time.sleep(6)
 
 		#parse otp from mail
 		otp = self.parse_otp_from_mail()
-		print 'otp....',otp
 
 		#submit otp
 		sub_otp_url = "https://static.practicefusion.com/EhrAuthEndpoint/api/v3/browser/authorize"
@@ -107,7 +93,6 @@ class PFEntrySpider(scrapy.Spider):
 
 		sub_otp_response = requests.request("POST", sub_otp_url, data=json.dumps(sub_otp_payload), headers=sub_otp_headers)
 		sub_data = json.loads(sub_otp_response.text)
-		print '...\n',sub_data
 		session_tkn = sub_data["sessionToken"]
 
 		patients_obj = session.query(patient).filter_by(pf_entry_flag=0).all()
@@ -147,7 +132,6 @@ class PFEntrySpider(scrapy.Spider):
 			race = dmo_obj[0][8]
 
 			#Format date
-			print '........', dob
 			if ', ' in dob:
 				date_of_birth = dob.replace(', ',' ')
 				dt_obj = datetime.strptime(date_of_birth, '%b %d %Y')
@@ -227,7 +211,6 @@ class PFEntrySpider(scrapy.Spider):
 
 			search_response = requests.request("POST", search_url, data=json.dumps(search_payload), headers=search_headers)
 			search_response = json.loads(search_response.text)
-			print '\n\n.......\n\n', (search_response)
 
 			#get city and state from zip
 			url = "https://static.practicefusion.com/PracticeEndpoint/api/v1/PostalCodeCityStateProvince/11552"
@@ -250,7 +233,7 @@ class PFEntrySpider(scrapy.Spider):
 								"lastName":lastName,
 								"birthDate":dob,
 								"gender":gender,
-                                "age":age,
+								"age":age,
 								"mobilePhone":mobilePhone,
 								"mobilePhoneCountry":"USA",
 								"isUserOfMobilePhone":"true",
@@ -264,7 +247,7 @@ class PFEntrySpider(scrapy.Spider):
 								"isActive":"true",
 								"appointmentRemindersEnabled":"false",
 								"isFakePatient":"false",
-                                "raceOptions":"[]",
+								"raceOptions":"[]",
 								"primaryAddress":
 									{"streetAddress1":streetAddress1,
 									"streetAddress2":streetAddress2,

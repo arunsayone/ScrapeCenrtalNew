@@ -1,23 +1,23 @@
-
-import pyodbc
-import json
-import sqlalchemy
 import urllib
-import unicodedata
+import gspread
 import datetime
+import unicodedata
+import ConfigParser
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -33,7 +33,7 @@ class GoogleSpreedSheetSync(object):
 	def __init__(self):
 		client = self.login()
 		self.sheet = client.open("C.Patients").sheet1
-		# self.sync_data_from_db(client)
+		self.sync_data_from_db(client)
 		self.sync_data_from_sheet(client)
 
 
@@ -71,8 +71,6 @@ class GoogleSpreedSheetSync(object):
 			# update Name
 			name_obj = session.execute("select * from name where patient_id = '"+str(patient_id)+"'")
 			name_obj = name_obj.fetchall()
-
-			print '\n\n',name_obj
 
 			nm_session = Session(engine)
 			full_name = name_obj[0][2]+' '+name_obj[0][4]
@@ -150,7 +148,6 @@ class GoogleSpreedSheetSync(object):
 		record = Base.classes.record
 		appointment = Base.classes.appointment
 		history_medical_disease = Base.classes.history_medical_disease
-		g_sheet_scheduling = Base.classes.g_sheet_scheduling
 		remind = Base.classes.remind
 		history = Base.classes.history
 		condition = Base.classes.condition

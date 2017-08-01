@@ -1,28 +1,21 @@
-import re
-import csv
 import scrapy
-import os.path
-import requests
-import subprocess
 import urllib
+import ConfigParser
 
-from collections import defaultdict
-
-from lxml import html
 from twilio.rest import Client
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -36,13 +29,12 @@ class TwilioSpider(scrapy.Spider):
 	name = "twilio"
 	domain = "https://www.twilio.com"
 	start_urls = ["https://www.twilio.com/login"]
-	password_ = '4r6&^jhg&U1234'
-	login_ = 'Tester@medwiser.org'
 
-	account_sid = "ACda10725b966b653d1fd4e8ee3bc4fa9c"
-	auth_token = "b57924fb283d944aa79b424b6b86bafb"
+	password_ = config.get('TWILIO','password')
+	login_ = config.get('TWILIO','username')
 
-
+	account_sid = config.get('TWILIO','account_sid')
+	auth_token = config.get('TWILIO','auth_token')
 
 	def parse(self, response):
 		"""

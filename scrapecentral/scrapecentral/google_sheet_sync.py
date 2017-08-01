@@ -1,21 +1,21 @@
-import pyodbc
-import json
-import sqlalchemy
 import urllib
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import ConfigParser
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
+from oauth2client.service_account import ServiceAccountCredentials
 
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -23,7 +23,6 @@ params = urllib.quote_plus('DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + se
 engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params) 
 Base.prepare(engine, reflect=True)
 session = Session(engine)
-
 
 class GoogleSpreedSheetSync(object):
 
@@ -50,7 +49,6 @@ class GoogleSpreedSheetSync(object):
 		record = Base.classes.record
 		appointment = Base.classes.appointment
 		history_medical_disease = Base.classes.history_medical_disease
-		g_sheet_scheduling = Base.classes.g_sheet_scheduling
 		remind = Base.classes.remind
 		history = Base.classes.history
 		condition = Base.classes.condition
@@ -59,7 +57,6 @@ class GoogleSpreedSheetSync(object):
 		pf_appt_report = Base.classes.pf_appt_report
 		book = Base.classes.book
 		request_appt = Base.classes.request_appt
-		gen_availability = Base.classes.gen_availability
 		call_book_appt = Base.classes.call_book_appt
 		qualify = Base.classes.qualify
 		intake = Base.classes.intake
@@ -164,7 +161,6 @@ class GoogleSpreedSheetSync(object):
 		communication = Base.classes.communication
 		phone = Base.classes.phone
 		email = Base.classes.email
-		g_sheet_scheduling = Base.classes.g_sheet_scheduling
 		book = Base.classes.book
 		request_appt = Base.classes.request_appt
 		medical = Base.classes.medical
@@ -176,7 +172,6 @@ class GoogleSpreedSheetSync(object):
 		for patient_ob in patients_obj:
 
 			rows = self.sheet.get_all_values()
-
 			row_count = len(rows)
 			new_row = row_count + 1
 

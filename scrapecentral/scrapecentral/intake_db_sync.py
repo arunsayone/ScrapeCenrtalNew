@@ -1,24 +1,25 @@
-import pyodbc
-import json
-import sqlalchemy
 import time
 import urllib
+import gspread
 import unicodedata
+import ConfigParser
 
 from datetime import datetime
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()

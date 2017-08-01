@@ -1,9 +1,6 @@
 import re
-import os
-import csv
 import scrapy
-import os.path
-import requests
+import ConfigParser
 
 from lxml import html
 from scrapecentral.items import ScrapecentralItem
@@ -13,21 +10,25 @@ class MDSpider(scrapy.Spider):
     name = "md"
     domain = "https://www.marijuanadoctors.com"
     start_urls = ["https://www.marijuanadoctors.com/user/practice/index"]
-    login_user = "info@doctormm.com"
-    login_pass = "50)7uj(#gdyuU"
-    detail_field_set = ['drug_arrest', 'DOB', 'treat_last_visit', 'city', 'prequalifies', 'qualify_condition', 'phy_fax_work', 'patient_name', 'location', 'patient_note', 'zip', 'rec_date', 'address1', 'phone', 'prior_rec', 'recent_medicine', 'valid_identification', 'appointment_type', 'onset_month', 'address_data', 'rec_state', 'uploaded_files', 'sex', 'phy_lname', 'ins_name', 'first_choice', 'lname', 'state', 'fname', 'ins_coverage', 'email', 'phy_fname', 'titration_history', 'adult_18', 'general_availability', 'phone2', 'current_parole_probation', 'prescription_meds', 'current_treat', 'onset_yr', 'current_NYresident', 'state_residence', 'prescribed', 'phy_phone_work', 'med_records', 'second_choice']
 
-    def __init__(self):
-        """
-        Creating header names for the CSV file
-        :param data: self
-        :return:
-        """
-        self.filepath = '/home/sayone/projects/Scrapy/scrapecentral/scrapecentral/md_data.csv'
-        if os.path.exists(self.filepath) is False:
-            with open('md_data.csv', 'a') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=self.detail_field_set)
-                writer.writeheader()
+    config = ConfigParser.ConfigParser()
+    section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+    login_user = config.get('DOCTORS','username')
+    login_pass = config.get('DOCTORS','password')
+
+
+    # def __init__(self):
+    #     """
+    #     Creating header names for the CSV file
+    #     :param data: self
+    #     :return:
+    #     """
+        # self.filepath = '/home/sayone/projects/Scrapy/scrapecentral/scrapecentral/md_data.csv'
+        # if os.path.exists(self.filepath) is False:
+        #     with open('md_data.csv', 'a') as csvfile:
+        #         writer = csv.DictWriter(csvfile, fieldnames=self.detail_field_set)
+        #         writer.writeheader()
 
     def parse(self, response):
         """
@@ -57,30 +58,30 @@ class MDSpider(scrapy.Spider):
         :return:
         """
         if "There are no new appointment requests" in response.body:
-            print 'Insideeeee no new appointment'
-            item = ScrapecentralItem()
-            yield scrapy.Request(
-                        # url="https://www.marijuanadoctors.com/user/practice/appointment/view_request/120805",
-                        url="https://www.marijuanadoctors.com/user/practice/appointment/view_request/121355",
-                        meta = {'item':item},
-                        callback = self.parse_patient_details)
-        # else:
-        #     doc = html.fromstring(response.body)
-        #     appoinment_data = doc.xpath('//table[@id="appointment_list_new"]/tbody/tr')
-        #     # appoinment = doc.xpath('//table[@id="appointment_list_new"]/tbody/tr')[0]
-        #     for appoinment in appoinment_data:
-        #         item = ScrapecentralItem()
-        #         item["requested_on"] = appoinment.xpath('./td/text()')[0]
-        #         item["location"] = appoinment.xpath('./td/text()')[1]
-        #         item["patient_name"] = appoinment.xpath('./td/text()')[2]
-        #         item["type"] = appoinment.xpath('./td/text()')[3]
-        #         item["dates_requested"] = appoinment.xpath('./td/text()')[4]
-        #         url = appoinment.xpath('./td/a/@href')
-        #         yield scrapy.Request(
-        #                     url=self.domain + url[0],
-        #                     callback = self.parse_appointment_details,
-        #                     meta = {'item': item},
-        #                     dont_filter=True)
+            print 'No appointments present..'
+            # item = ScrapecentralItem()
+            # yield scrapy.Request(
+            #             # url="https://www.marijuanadoctors.com/user/practice/appointment/view_request/120805",
+            #             url="https://www.marijuanadoctors.com/user/practice/appointment/view_request/121355",
+            #             meta = {'item':item},
+            #             callback = self.parse_patient_details)
+        else:
+            doc = html.fromstring(response.body)
+            appoinment_data = doc.xpath('//table[@id="appointment_list_new"]/tbody/tr')
+            # appoinment = doc.xpath('//table[@id="appointment_list_new"]/tbody/tr')[0]
+            for appoinment in appoinment_data:
+                item = ScrapecentralItem()
+                item["requested_on"] = appoinment.xpath('./td/text()')[0]
+                item["location"] = appoinment.xpath('./td/text()')[1]
+                item["patient_name"] = appoinment.xpath('./td/text()')[2]
+                item["type"] = appoinment.xpath('./td/text()')[3]
+                item["dates_requested"] = appoinment.xpath('./td/text()')[4]
+                url = appoinment.xpath('./td/a/@href')
+                yield scrapy.Request(
+                            url=self.domain + url[0],
+                            callback = self.parse_appointment_details,
+                            meta = {'item': item},
+                            dont_filter=True)
 
     def parse_appointment_details(self, response):
         """
@@ -348,24 +349,6 @@ class MDSpider(scrapy.Spider):
         item['his_category'] = 'nill'
         item['text_address'] = 'nill'
         item['address_type'] = 'nill'
-        #
-
-
-        fieldnames = [item['drug_arrest'], item['DOB'], item['treat_last_visit'],
-                      item['city'], item['prequalifies'], item['qualify_condition'],
-                      item['phy_fax_work'], item['patient_name'], item['location'],
-                      item['patient_note'][0], item['zip'], item['rec_date'], item['address1'],
-                      item['phone'], item['prior_rec'], item['recent_medicine'], item['valid_identification'],
-                      item['appointment_type'], item['onset_month'], ','.join(item['address_data']), item['rec_state'],
-                      item['uploaded_files'], item['sex'], item['phy_lname'], item['ins_name'],
-                      item['first_choice'], item['lname'], item['state'], item['fname'], item['ins_coverage'],
-                      item['email'], item['phy_fname'], item['titration_history'], item['adult_18'],
-                      str(item['general_availability']), item['phone2'], item['current_parole_probation'],
-                      item['prescription_meds'], item['current_treat'], item['onset_yr'], item['current_nyresident'],
-                      item['state_residence'], item['prescribed'], item['phy_phone_work'], item['med_records'],
-                      item['second_choice']]
-
-        # print '\n\n-------------------------\n\n',item,'\n\n\n'
 
         yield item
 

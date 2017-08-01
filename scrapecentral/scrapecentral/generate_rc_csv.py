@@ -1,22 +1,23 @@
-import pyodbc
-import json
-import sqlalchemy
 import datetime
 import urllib
 import gspread
+import ConfigParser
 
 from dateutil.parser import parse
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
 from oauth2client.service_account import ServiceAccountCredentials
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -32,7 +33,6 @@ class GoogleSheetWriteToXlsx(object):
         client = self.login()
         self.sheet = client.open("UploadRC1.xlsx").sheet1
         self.add_data_to_sheet(client)
-        # self.sync_data_from_db(client)
 
     def add_data_to_sheet(self, client):
 
@@ -59,7 +59,6 @@ class GoogleSheetWriteToXlsx(object):
         pf_appt_report = Base.classes.pf_appt_report
         book = Base.classes.book
         request_appt = Base.classes.request_appt
-        gen_availability = Base.classes.gen_availability
 
 
         patient_obj = session.query(patient).filter_by(rc_flag=0).all()
@@ -125,14 +124,12 @@ class GoogleSheetWriteToXlsx(object):
                 dt = parse(date)
                 date = dt.strftime('%d/%m/%Y')
 
-            print 'date......\t',date
             self.sheet.update_acell(cell_name, date)
 
             # add Day
             date_str = str(date)
             day, month, year = (int(x) for x in date_str.split('/'))
             date_convert = datetime.date(year, month, day)
-            print date_convert.strftime("%A")
             day = date_convert.strftime("%A")
             cell_name = 'E'+ str(new_row)
             self.sheet.update_acell(cell_name, day)

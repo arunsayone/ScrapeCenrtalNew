@@ -1,20 +1,18 @@
-import re
-import csv
 import time
-import requests
 import datetime
+import ConfigParser
 
-from dateutil.parser import parse
-
-from lxml import html
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 
 class AutomateRC(object):
 
-    login = '2m@doctormm.com'
-    password = '6fx0o3QN%29o'
+    config = ConfigParser.ConfigParser()
+    section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+    login = config.get('REMINDER','username')
+    password = config.get('REMINDER','password')
 
     def __init__(self):
         self.upload_file()
@@ -43,7 +41,6 @@ class AutomateRC(object):
 
         if 'Michael Morgenstern' in driver.page_source:
             #write extra automation here
-            print 'insideeeeeeee'
             driver.find_element_by_partial_link_text("Upload a spreadsheet").click();
             time.sleep(2)
             driver.find_element_by_partial_link_text("1: Upload").click();

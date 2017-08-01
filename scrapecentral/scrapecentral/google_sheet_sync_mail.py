@@ -1,24 +1,23 @@
-import pyodbc
-import json
-import sqlalchemy
-import unicodedata
-import datetime
 import urllib
 import gspread
+import datetime
+import unicodedata
+import ConfigParser
 
-from oauth2client.service_account import ServiceAccountCredentials
-from datetime import date
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
+from oauth2client.service_account import ServiceAccountCredentials
 
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
@@ -179,10 +178,6 @@ class GoogleSpreedSheetSync(object):
 			self.sheet.update_acell(cell_name, patient_ob.id)
 
 			# add title
-			# patient_obj = session.execute("select id from patient where patient_id = '"+str(patient_ob.id)+"'")
-			# patient_obj = patient_obj.fetchone()
-
-
 			name_obj = session.execute("select * from name where patient_id = '"+str(patient_ob.id)+"'")
 			name_obj = name_obj.fetchall()
 

@@ -3,14 +3,10 @@ import json
 import time
 import scrapy
 import poplib
-import urllib
 import logging
 import requests
-import string, random
-import StringIO, rfc822
-import requests
+import ConfigParser
 
-from scrapy import Request
 from scrapecentral.items import ScrapecentralItem
 
 
@@ -18,13 +14,17 @@ class PFDownloadSpider(scrapy.Spider):
     name = "pf_download"
     domain = "http://www.practicefusion.com/"
     start_urls = ["https://static.practicefusion.com/apps/ehr/?c=1385407302#/login"]
-    password_ = 'pA142*2@'
-    login_ = '2m@doctormm.com'
+
+    config = ConfigParser.ConfigParser()
+    section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
+
+    password_ = config.get('FUSION','password')
+    login_ = config.get('FUSION','username')
 
     # gmail account details
-    server = "pop.gmail.com"
-    user  = "Tester@medwiser.org"
-    password = "4r6&^jhg&U"
+    server = config.get('GMAIL','server')
+    user  = config.get('GMAIL','username')
+    password = config.get('GMAIL','password')
 
     def parse(self, response):
 

@@ -1,32 +1,21 @@
-import pyodbc
-import json
-import sqlalchemy
 import urllib
 import unicodedata
+import ConfigParser
+
 from datetime import datetime
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, mapper, sessionmaker
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
 
 from sqlalchemy import *
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+config = ConfigParser.ConfigParser()
+section = config.read("/home/sayone/project/ScrapeCenrtalNew/scrapecentral/scrapecentral/config.ini")
 
-server = 'tcp:medwiserstaging0001.database.windows.net'
-username = 'medwiser'
-password = 'Nhy65tgb'
-database = 'ScrapeCentralDatabase'
-# cnxn = pyodbc.connect(
-#  'DRIVER={ODBC Driver 13 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-# cursor = cnxn.cursor()
-# rs = cursor.execute("ALTER TABLE [association] ADD id int NOT NULL IDENTITY (1,1) PRIMARY KEY")
-# for d in rs:
-#   print '\n',d
+server = config.get('DATABASE','server')
+username = config.get('DATABASE','username')
+password = config.get('DATABASE','password')
+database = config.get('DATABASE','database')
 
 metadata = MetaData()
 Base = automap_base()
