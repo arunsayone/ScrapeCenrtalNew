@@ -1,4 +1,5 @@
 import re
+import os
 import json
 import time
 import scrapy
@@ -14,9 +15,10 @@ class PFDownloadSpider(scrapy.Spider):
     name = "pf_download"
     domain = "http://www.practicefusion.com/"
     start_urls = ["https://static.practicefusion.com/apps/ehr/?c=1385407302#/login"]
+    conf_path = os.path.dirname(os.path.abspath(__file__))+'/config.ini'
 
     config = ConfigParser.ConfigParser()
-    section = config.read("config.ini")
+    section = config.read(conf_path)
 
     password_ = config.get('FUSION','password')
     login_ = config.get('FUSION','username')

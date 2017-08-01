@@ -1,4 +1,5 @@
 import re
+import os
 import json
 import time
 import scrapy
@@ -15,8 +16,10 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 
+conf_path = os.path.dirname(os.path.abspath(__file__))+'/config.ini'
+
 config = ConfigParser.ConfigParser()
-section = config.read("config.ini")
+section = config.read(conf_path)
 
 server = config.get('DATABASE','server')
 username = config.get('DATABASE','username')

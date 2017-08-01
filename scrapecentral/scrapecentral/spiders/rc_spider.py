@@ -15,11 +15,14 @@ class RCSpider(scrapy.Spider):
 	name = "rc"
 	domain = "https://secure.remindercall.com"
 	start_urls = ["https://secure.remindercall.com/login"]
+	conf_path = os.path.dirname(os.path.abspath(__file__))+'/config.ini'
 
 	config = ConfigParser.ConfigParser()
-	section = config.read("config.ini")
+	section = config.read(conf_path)
 
-	chrome_path = config.get('CHROME','path')
+	login_ = config.get('REMINDER','username')
+	password_ = config.get('REMINDER','password')
+
 
 	# def __init__(self):
 	#     """

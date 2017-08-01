@@ -1,4 +1,5 @@
 import re
+import os
 import scrapy
 import ConfigParser
 
@@ -10,9 +11,10 @@ class MDSpider(scrapy.Spider):
     name = "md"
     domain = "https://www.marijuanadoctors.com"
     start_urls = ["https://www.marijuanadoctors.com/user/practice/index"]
+    conf_path = os.path.dirname(os.path.abspath(__file__))+'/config.ini'
 
     config = ConfigParser.ConfigParser()
-    section = config.read("config.ini")
+    section = config.read(conf_path)
 
     login_user = config.get('DOCTORS','username')
     login_pass = config.get('DOCTORS','password')
