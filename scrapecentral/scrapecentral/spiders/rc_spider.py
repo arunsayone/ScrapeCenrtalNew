@@ -99,9 +99,9 @@ class RCSpider(scrapy.Spider):
 				item["rc_delivery"] = row[6]
 				item["rc_duration"] = row[7]
 				item["rc_tries_status"] = row[8]
-				item["rc_reply"] = row[9]
-				item["rc_date"] = date
-
+				item["rc_reply"] = row[8]
+				if date:
+					item["rc_date"] = date
 				yield item
 		else:
 			print 'ERROR WHILE LOGIN'

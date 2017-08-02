@@ -187,7 +187,8 @@ class GoogleSpreedSheetSync(object):
 			name_obj = session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
 			name_obj = name_obj.fetchall()
 
-			full_name = name_obj[0][2]+' '+name_obj[0][4]
+			if name_obj:
+				full_name = name_obj[0][2]+' '+name_obj[0][4]
 
 			cell_name = 'B'+ str(new_row)
 			self.sheet.update_acell(cell_name, full_name)
@@ -218,10 +219,11 @@ class GoogleSpreedSheetSync(object):
 			date_requested = str(request_appt_obj[0][7])+';'+str(request_appt_obj[0][9])
 			self.sheet.update_acell(cell_name, date_requested)
 
-			# add PHONE
-			communication_obj = session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
-			communication_obj = communication_obj.fetchone()
-			cell_name = 'G'+ str(new_row)
+			if name_obj:
+				# add PHONE
+				communication_obj = session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
+				communication_obj = communication_obj.fetchone()
+				cell_name = 'G'+ str(new_row)
 
 			phone_obj = session.execute("select * from phone where communication_id = '"+str(communication_obj[0])+"'")
 			phone_obj = phone_obj.fetchall()
@@ -241,8 +243,10 @@ class GoogleSpreedSheetSync(object):
 			condition_obj = condition_obj.fetchone()
 			qualify_obj = session.execute("select * from qualify where condition_id = '"+str(condition_obj[0])+"'")
 			qualify_obj = qualify_obj.fetchall()
-			cell_name = 'I'+ str(new_row)
-			self.sheet.update_acell(cell_name, qualify_obj[0][1])
+			print 'qualifyyy...\n',qualify_obj
+			if qualify_obj:
+				cell_name = 'I'+ str(new_row)
+				self.sheet.update_acell(cell_name, qualify_obj[0][1])
 
 			# add Flag
 			# Working on this field in sql

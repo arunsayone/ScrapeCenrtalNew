@@ -186,7 +186,8 @@ class GoogleSpreedSheetSync(object):
 
 			dmo_obj = session.execute("select * from demographic_detail where detail_id = '"+str(detail_obj[0])+"'")
 			dmo_obj = dmo_obj.fetchall()
-			sex = dmo_obj[0][2]
+			if dmo_obj:
+				sex = dmo_obj[0][2]
 
 			cell_name = 'B'+ str(new_row)
 			if 'F' in sex:
@@ -246,7 +247,16 @@ class GoogleSpreedSheetSync(object):
 			pf_obj = session.execute("select * from pf_appt_report where visit_id = '"+str(visit_obj[0])+"'")
 			pf_obj = pf_obj.fetchall()
 
-			pf_date = self.convert_date(unicodedata.normalize('NFKD',pf_obj[0][1]).encode('ascii','ignore'))
+			if pf_obj:
+				pf_date = self.convert_date(unicodedata.normalize('NFKD',pf_obj[0][1]).encode('ascii','ignore'))
+
+				# add time
+				cell_name = 'L'+ str(new_row)
+				self.sheet.update_acell(cell_name, pf_obj[0][2])
+
+				# add status
+				cell_name = 'M'+ str(new_row)
+				self.sheet.update_acell(cell_name, pf_obj[0][3])
 
 			cell_name = 'K'+ str(new_row)
 			self.sheet.update_acell(cell_name, pf_date)
@@ -258,13 +268,7 @@ class GoogleSpreedSheetSync(object):
 				cell_name = 'J'+ str(new_row)
 				self.sheet.update_acell(cell_name, day)
 
-			# add time
-			cell_name = 'L'+ str(new_row)
-			self.sheet.update_acell(cell_name, pf_obj[0][2])
 
-			# add status
-			cell_name = 'M'+ str(new_row)
-			self.sheet.update_acell(cell_name, pf_obj[0][3])
 
 			# add intake
 			intake_obj = session.execute("select * from intake where visit_id = '"+str(visit_obj[0])+"'")

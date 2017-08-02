@@ -60,20 +60,23 @@ class TwilioSpider(scrapy.Spider):
 			communication = communication.fetchone()
 
 			phone_obj = session.execute("select * from phone where communication_id = '"+str(communication.id)+"'")
-			phone_obj = phone_obj.fetchall()
+			if phone_obj:
+				phone_obj = phone_obj.fetchall()
 
-			phone_num = phone_obj[0][1]
-			phone_num = phone_num.replace('(','+1').replace(') ','-')
+				phone_num = phone_obj[0][1]
+				phone_num = phone_num.replace('(','+1').replace(') ','-')
 
-			client = Client(self.account_sid, self.auth_token)
-			phone_num = "+1415-701-2311"
-			number = client.lookups.phone_numbers(phone_num).fetch(type=["carrier", "caller-name"],)
-			# number2 = client.lookups.phone_numbers("+1415-701-2311").fetch(type="caller-name")
+				client = Client(self.account_sid, self.auth_token)
+				# phone_num = "+1415-701-2311"
+				number = client.lookups.phone_numbers(phone_num).fetch(type=["carrier", "caller-name"],)
+				# number2 = client.lookups.phone_numbers("+1415-701-2311").fetch(type="caller-name")
 
-			session.add(carrier_index(carrier=number.carrier["name"],type =number.carrier["type"],carrier_mms ="Not Provided",carrier_sms ="Not Provided",communication_id =communication.id))
-			session.commit()
+				session.add(carrier_index(carrier=number.carrier["name"],type =number.carrier["type"],carrier_mms ="Not Provided",carrier_sms ="Not Provided",communication_id =communication.id))
+				session.commit()
 
-			print 'PHONE NUMBER DATA SAVED SUCCESSFULLY..'
+				print 'PHONE NUMBER DATA SAVED SUCCESSFULLY..'
+			else:
+				print 'PHONE NUMBER IS NOT MATCHING..'
 
 			# patient_obj.twilio_flag = '1'
 			# session.commit()

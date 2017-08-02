@@ -177,7 +177,9 @@ class GoogleSpreedSheetSync(object):
 			name_obj = session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
 			name_obj = name_obj.fetchall()
 
-			full_name = name_obj[0][2]+' '+name_obj[0][4]
+			full_name = ''
+			if full_name:
+				full_name = name_obj[0][2]+' '+name_obj[0][4]
 
 			cell_name = 'B'+ str(new_row)
 			self.sheet.update_acell(cell_name, full_name)

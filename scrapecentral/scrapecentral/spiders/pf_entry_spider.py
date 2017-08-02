@@ -113,9 +113,13 @@ class PFEntrySpider(scrapy.Spider):
 			name_obj = name_obj.fetchall()
 
 			md_id = patient_ob.id
-			firstName = name_obj[0][2]
-			middleName = name_obj[0][3]
-			lastName = name_obj[0][4]
+			firstName = ''
+			middleName  = ''
+			lastName = ''
+			if name_obj:
+				firstName = name_obj[0][2]
+				middleName = name_obj[0][3]
+				lastName = name_obj[0][4]
 
 			detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
 			detail_obj = detail_obj.fetchone()
