@@ -70,7 +70,7 @@ class ScrapecentralPipeline(object):
 			session.add(patient(patient_id=item['md_id']))
 			session.commit()
 
-			# association tabl
+			# association table
 			pt = session.execute("select id from patient where patient_id = '"+str(item['md_id'])+"'")
 			pt = pt.fetchone()
 			session.add(association(patient_id=pt[0], relationship=item['relationship']))
@@ -221,6 +221,11 @@ class ScrapecentralPipeline(object):
 			session.add(workflow(visit_id=visit_obj[0]))
 			session.commit()
 
+			# pf table
+			session.add(pf_appt_report(visit_id= visit_obj[0]))
+			session.commit()
+
+
 		if spider.name == 'rc':
 
 			print 'INSIDE RC....'
@@ -237,11 +242,25 @@ class ScrapecentralPipeline(object):
 
 				patient_id = name_obj[0][5]
 
-				appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_id)+"'")
-				appointment_obj = appointment_obj.fetchone()
+				try:
+					appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_id)+"'")
+					appointment_obj = appointment_obj.fetchone()
+				except:
+					session.add(appointment(patient_id=patient_id))
+					session.commit()
 
-				remind_obj = session.execute("select id from remind where appointment_id = '"+str(appointment_obj[0])+"'")
-				remind_obj = remind_obj.fetchone()
+					appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_id)+"'")
+					appointment_obj = appointment_obj.fetchone()
+
+				try:
+					remind_obj = session.execute("select id from remind where appointment_id = '"+str(appointment_obj[0])+"'")
+					remind_obj = remind_obj.fetchone()
+
+				except:
+					session.add(remind(appointment_id=appointment_obj[0]))
+					session.commit()
+					remind_obj = session.execute("select id from remind where appointment_id = '"+str(appointment_obj[0])+"'")
+					remind_obj = remind_obj.fetchone()
 
 				session.add(rc_call_report(date = item["rc_date"],group =item['rc_group'],delivery=item["rc_delivery"],duration=item["rc_duration"],type=item["rc_type"],recipient=item["rc_recipient"],name=item["rc_name"],appt=item["rc_appt"],tries_status=item["rc_tries_status"],reply=item["rc_reply"],remind_id=remind_obj[0]))
 				session.commit()
@@ -319,6 +338,10 @@ class ScrapecentralPipeline(object):
 			session.add(name(fname=item["pf_pt_firstName"],lname =item["pf_pt_lastName"], patient_id =pt[0], association_id = association[0]))
 			session.commit()
 
+			# physician table
+			session.add(physician(association_id = association[0]))
+			session.commit()
+
 			# add demographic_detail
 			try:
 				name_ob = session.execute("select id from name where association_id = '"+str(association[0])+"'")
@@ -362,6 +385,70 @@ class ScrapecentralPipeline(object):
 
 			# email table
 			session.add(email(email=item["pf_pt_email"], communication_id=communication[0]))
+			session.commit()
+
+			# text_message table
+			session.add(text_message(communication_id=communication[0]))
+			session.commit()
+
+			# record table
+			session.add(record(name_id=name_ob[0]))
+			session.commit()
+
+			# medical table
+			session.add(medical(patient_id=item["pf_pt_id"]))
+			session.commit()
+
+			#  appointment table
+			session.add(appointment(patient_id=item["pf_pt_id"]))
+			session.commit()
+
+
+			# condition table
+			medical = session.execute("select id from medical where patient_id = '"+str(item["pf_pt_id"])+"'")
+			medical = medical.fetchone()
+			session.add(condition(medical_id=medical[0]))
+			session.commit()
+
+			# qualify table
+			condition_obj = session.execute("select id from condition where medical_id = '"+str(medical[0])+"'")
+			condition_obj = condition_obj.fetchone()
+			session.add(qualify(condition_id =condition_obj[0]))
+			session.commit()
+
+			# remind table
+			appointment_obj = session.execute("select id from appointment where patient_id = '"+str(item["pf_pt_id"])+"'")
+			appointment_obj = appointment_obj.fetchone()
+			session.add(remind(appointment_id=appointment_obj[0]))
+			session.commit()
+
+			#book table
+			session.add(book(appointment_id=appointment_obj[0]))
+			session.commit()
+
+			book_obj = session.execute("select id from book where appointment_id = '"+str(appointment_obj[0])+"'")
+			book_obj = book_obj.fetchone()
+			session.add(request_appt(book_id=book_obj[0]))
+			session.commit()
+
+			# medical_record table
+			record_obj = session.execute("select id from record where name_id = '"+str(name_ob[0])+"'")
+			record_obj = record_obj.fetchone()
+			session.add(medical_record(record_id=record_obj[0]))
+			session.commit()
+
+			# visit table
+			session.add(visit(appointment_id=appointment_obj[0]))
+			session.commit()
+
+			# workflow table
+			visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0])+"'")
+			visit_obj = visit_obj.fetchone()
+			session.add(workflow(visit_id=visit_obj[0]))
+			session.commit()
+
+			# pf table
+			session.add(pf_appt_report(visit_id= visit_obj[0]))
 			session.commit()
 
 			print 'DOWNLOADED DATA SAVED.....'

@@ -68,94 +68,100 @@ class GoogleSpreedSheetSync(object):
 					db_pt_name = name_obj[0][2]+' '+name_obj[0][4]
 
 					detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
-					dt_id = detail_obj.fetchone()[0]
+					if detail_obj:
+						print '....................../t',detail_obj
+						dt_id = detail_obj.fetchone()[0]
 
-					demographic_obj = session.execute("select * from demographic_detail where detail_id = '"+str(dt_id)+"'")
-					demographic_obj = demographic_obj.fetchall()
-					if demographic_obj:
-						db_pt_dob = self.convert_date(unicodedata.normalize('NFKD',demographic_obj[0][3]).encode('ascii','ignore'))
-						if sheet_pt_name == db_pt_name and sheet_pt_dob == db_pt_dob:
-							print 'MATCH FOUND....'
+						demographic_obj = session.execute("select * from demographic_detail where detail_id = '"+str(dt_id)+"'")
+						demographic_obj = demographic_obj.fetchall()
+						if demographic_obj:
+							db_pt_dob = self.convert_date(unicodedata.normalize('NFKD',demographic_obj[0][3]).encode('ascii','ignore'))
+							if sheet_pt_name == db_pt_name and sheet_pt_dob == db_pt_dob:
+								print 'MATCH FOUND....'
 
-							time.sleep(4)
-							cm_session = Session(engine)
-							communication_obj = cm_session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
-							phone_obj = cm_session.execute("select * from phone where communication_id = '"+str(communication_obj.fetchone()[0])+"'")
-							ph_obj = phone_obj.fetchall()
-							cm_session.close()
+								time.sleep(4)
+								cm_session = Session(engine)
+								communication_obj = cm_session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
+								phone_obj = cm_session.execute("select * from phone where communication_id = '"+str(communication_obj.fetchone()[0])+"'")
+								ph_obj = phone_obj.fetchall()
+								cm_session.close()
 
-							demographic_detail_obj = session.execute("select * from demographic_detail where detail_id = '"+str(dt_id)+"'")
-							dm_id = demographic_detail_obj.fetchall()
+								demographic_detail_obj = session.execute("select * from demographic_detail where detail_id = '"+str(dt_id)+"'")
+								dm_id = demographic_detail_obj.fetchall()
 
-							rc_session = Session(engine)
-							record_obj = rc_session.execute("select id from record where name_id = '"+str(name_obj[0][0])+"'")
-							rc_id = record_obj.fetchone()[0]
-							rc_session.close()
+								rc_session = Session(engine)
+								record_obj = rc_session.execute("select id from record where name_id = '"+str(name_obj[0][0])+"'")
+								rc_id = record_obj.fetchone()[0]
+								rc_session.close()
 
-							lc_session = Session(engine)
-							location_obj = lc_session.execute("select * from location where record_id = '"+str(rc_id)+"'")
-							lc_obj = location_obj.fetchall()
-							lc_session.close()
+								lc_session = Session(engine)
+								location_obj = lc_session.execute("select * from location where record_id = '"+str(rc_id)+"'")
+								lc_obj = location_obj.fetchall()
+								lc_session.close()
 
-							demographic_employment_obj = session.execute("select * from demographic_employment where detail_id = '"+str(dt_id)+"'")
-							dmo_obj = demographic_employment_obj.fetchall()
+								demographic_employment_obj = session.execute("select * from demographic_employment where detail_id = '"+str(dt_id)+"'")
+								dmo_obj = demographic_employment_obj.fetchall()
 
-							ass_session = Session(engine)
-							association_obj = ass_session.execute("select id from association where patient_id = '"+str(patient_obj.id)+"'")
-							as_id = association_obj.fetchone()[0]
-							ass_session.close()
+								ass_session = Session(engine)
+								association_obj = ass_session.execute("select id from association where patient_id = '"+str(patient_obj.id)+"'")
+								as_id = association_obj.fetchone()[0]
+								ass_session.close()
 
-							physician_obj = session.execute("select * from physician where association_id = '"+str(as_id)+"'")
-							phy_obj = physician_obj.fetchall()
+								physician_obj = session.execute("select * from physician where association_id = '"+str(as_id)+"'")
+								phy_obj = physician_obj.fetchall()
 
-							in_session = Session(engine)
-							insurance_obj = in_session.execute("select * from insurance where patient_id = '"+str(patient_obj.id)+"'")
-							ins_obj = insurance_obj.fetchall()
-							in_session.close()
+								in_session = Session(engine)
+								insurance_obj = in_session.execute("select * from insurance where patient_id = '"+str(patient_obj.id)+"'")
+								ins_obj = insurance_obj.fetchall()
+								in_session.close()
 
-							# pat_obj = session.execute("select * from patient where patient_id = '"+str(patient_obj.id)+"'")
+								# pat_obj = session.execute("select * from patient where patient_id = '"+str(patient_obj.id)+"'")
 
-							# table phone
-							ph_session = Session(engine)
-							ph_session.execute("update phone set home='"+str(row[9])+"',work='"+str(row[10])+"',cell='"+str(row[11])+"' where id='"+str(ph_obj[0][0])+"'")
-							ph_session.commit()
-							ph_session.close()
+								# table phone
+								ph_session = Session(engine)
+								ph_session.execute("update phone set home='"+str(row[9])+"',work='"+str(row[10])+"',cell='"+str(row[11])+"' where id='"+str(ph_obj[0][0])+"'")
+								ph_session.commit()
+								ph_session.close()
 
-							# table patient
-							session.execute("update patient set social_sec_no='"+str(row[12])+"' where id='"+str(patient_obj.id)+"'")
-							session.commit()
+								# table patient
+								session.execute("update patient set social_sec_no='"+str(row[12])+"' where id='"+str(patient_obj.id)+"'")
+								session.commit()
 
-							# table demographic_detail
-							session.execute("update demographic_detail set marital_status='"+str(row[15])+"', age='"+str(row[390])+"' where id='"+str(dm_id[0][0])+"'")
-							session.commit()
+								# table demographic_detail
+								session.execute("update demographic_detail set marital_status='"+str(row[15])+"', age='"+str(row[390])+"' where id='"+str(dm_id[0][0])+"'")
+								session.commit()
 
-							#table location
-							session.execute("update location set location_google='"+str(row[392])+"' where id='"+str(lc_obj[0][0])+"'")
-							session.commit()
+								#table location
+								session.execute("update location set location_google='"+str(row[392])+"' where id='"+str(lc_obj[0][0])+"'")
+								session.commit()
 
-							#employer details
-							session.execute("update demographic_employment set employer='"+str(row[24])+"' where id='"+str(dmo_obj[0][0])+"'")
-							session.commit()
+								#employer details
+								session.execute("update demographic_employment set employer='"+str(row[24])+"' where id='"+str(dmo_obj[0][0])+"'")
+								session.commit()
 
-							#physician details
-							phy_session = Session(engine)
-							phy_name = row[35]
-							if ' ' in phy_name:
-								fname = phy_name.split(' ')[0]+' '+phy_name.split(' ')[1]
-								lname = phy_name.split(' ')[2]
-								phy_session.execute("update physician set fname='"+str(fname)+"',lname ='"+str(lname)+"',phone ='"+str(row[36])+"', fax ='"+str(row[37])+"' where id='"+str(phy_obj[0][0])+"'")
-							else:
-								fname = row[35]
-								lname = 'None'
-								phy_session.execute("update physician set fname='"+str(fname)+"',lname ='"+str(lname)+"',phone ='"+str(row[36])+"', fax ='"+str(row[37])+"' where id='"+str(phy_obj[0][0])+"'")
-							phy_session.commit()
-							phy_session.close()
+								#physician details
+								phy_session = Session(engine)
+								phy_name = row[35]
+								if ' ' in phy_name:
+									fname = phy_name.split(' ')[0]+' '+phy_name.split(' ')[1]
+									lname = phy_name.split(' ')[2]
+									phy_session.execute("update physician set fname='"+str(fname)+"',lname ='"+str(lname)+"',phone ='"+str(row[36])+"', fax ='"+str(row[37])+"' where id='"+str(phy_obj[0][0])+"'")
+								else:
+									fname = row[35]
+									lname = 'None'
+									phy_session.execute("update physician set fname='"+str(fname)+"',lname ='"+str(lname)+"',phone ='"+str(row[36])+"', fax ='"+str(row[37])+"' where id='"+str(phy_obj[0][0])+"'")
+								phy_session.commit()
+								phy_session.close()
 
-							#insurance details  #table insurance
-							session.execute("update insurance set name='"+str(row[43])+"',policy ='"+str(row[44])+"',i_group='"+str(row[45])+"' where id='"+str(ins_obj[0][0])+"'")
-							session.commit()
+								#insurance details  #table insurance
+								session.execute("update insurance set name='"+str(row[43])+"',policy ='"+str(row[44])+"',i_group='"+str(row[45])+"' where id='"+str(ins_obj[0][0])+"'")
+								session.commit()
 
-							print 'table values updated successfully'
+								# set intake_flag
+								session.execute("update patient set intake_flag='1' where id='"+str(patient_ob.id)+"'")
+								session.commit()
+
+								print 'DATABASE VALUES UPDATED SUCCESSFULLY'
 				else:
 					print 'MATCH ID NOT FOUND....'
 

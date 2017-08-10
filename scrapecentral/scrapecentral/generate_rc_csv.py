@@ -76,102 +76,102 @@ class GoogleSheetWriteToXlsx(object):
             asso_session = Session(engine)
             association_obj = asso_session.execute("select id from association where patient_id = '"+str(patient_ob.id)+"'")
             association_obj = association_obj.fetchone()
-
-            na_session = Session(engine)
-            name_obj = na_session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
-            name_obj = name_obj.fetchall()
-
-            cell_name = 'B'+ str(new_row)
-            self.sheet.update_acell(cell_name, name_obj[0][2])
-            na_session.close()
-
-            # add Last Name
-            cell_name = 'C'+ str(new_row)
-            self.sheet.update_acell(cell_name, name_obj[0][4])
             asso_session.close()
+            if association_obj:
+                na_session = Session(engine)
+                name_obj = na_session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
+                name_obj = name_obj.fetchall()
+                if name_obj:
+                    cell_name = 'B'+ str(new_row)
+                    self.sheet.update_acell(cell_name, name_obj[0][2])
 
-            # add Phone
-            cm_session = Session(engine)
-            communication_obj = na_session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
-            communication_obj = communication_obj.fetchone()
-            cm_session.close()
+                    # add Last Name
+                    cell_name = 'C'+ str(new_row)
+                    self.sheet.update_acell(cell_name, name_obj[0][4])
 
-            ph_session = Session(engine)
-            phone_obj = na_session.execute("select * from phone where communication_id = '"+str(communication_obj[0])+"'")
-            phone_obj = phone_obj.fetchall()
-            ph_session.close()
+                    # add Phone
+                    communication_obj = na_session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
+                    communication_obj = communication_obj.fetchone()
+                    if communication_obj:
 
-            cell_name = 'D'+ str(new_row)
-            self.sheet.update_acell(cell_name, phone_obj[0][1])
+                        phone_obj = na_session.execute("select * from phone where communication_id = '"+str(communication_obj[0])+"'")
+                        phone_obj = phone_obj.fetchall()
+                        na_session.close()
 
-            # add Date
-            ap_session = Session(engine)
-            appointment_obj = ap_session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
-            appointment_obj = appointment_obj.fetchone()
-            ap_session.close()
+                        if phone_obj:
+                            cell_name = 'D'+ str(new_row)
+                            self.sheet.update_acell(cell_name, phone_obj[0][1])
 
-            book_obj = session.execute("select id from book where appointment_id = '"+str(appointment_obj[0])+"'")
-            book_obj = book_obj.fetchone()
+                            # add Date
+                            ap_session = Session(engine)
+                            appointment_obj = ap_session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
+                            appointment_obj = appointment_obj.fetchone()
+                            ap_session.close()
 
-            cell_name = 'F'+ str(new_row)
-            ra_session = Session(engine)
-            appt_obj = ra_session.execute("select * from request_appt where book_id = '"+str(book_obj[0])+"'")
-            appt_obj = appt_obj.fetchall()
-            ra_session.close()
+                            if appointment_obj:
+                                book_obj = session.execute("select id from book where appointment_id = '"+str(appointment_obj[0])+"'")
+                                book_obj = book_obj.fetchone()
 
-            date = appt_obj[0][7]
-            if ',' in date:
-                dt = parse(date)
-                date = dt.strftime('%d/%m/%Y')
+                                if book_obj:
+                                    cell_name = 'F'+ str(new_row)
+                                    ra_session = Session(engine)
+                                    appt_obj = ra_session.execute("select * from request_appt where book_id = '"+str(book_obj[0])+"'")
+                                    appt_obj = appt_obj.fetchall()
+                                    ra_session.close()
 
-            self.sheet.update_acell(cell_name, date)
+                                    date = appt_obj[0][7]
+                                    if ',' in date:
+                                        dt = parse(date)
+                                        date = dt.strftime('%d/%m/%Y')
 
-            # add Day
-            date_str = str(date)
-            day, month, year = (int(x) for x in date_str.split('/'))
-            date_convert = datetime.date(year, month, day)
-            day = date_convert.strftime("%A")
-            cell_name = 'E'+ str(new_row)
-            self.sheet.update_acell(cell_name, day)
+                                    self.sheet.update_acell(cell_name, date)
 
-            # add Time
-            cell_name = 'G'+ str(new_row)
-            self.sheet.update_acell(cell_name, appt_obj[0][8])
+                                    # add Day
+                                    date_str = str(date)
+                                    day, month, year = (int(x) for x in date_str.split('/'))
+                                    date_convert = datetime.date(year, month, day)
+                                    day = date_convert.strftime("%A")
+                                    cell_name = 'E'+ str(new_row)
+                                    self.sheet.update_acell(cell_name, day)
 
-            # add Type
-            visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0])+"'")
-            visit_obj = visit_obj.fetchone()
+                                    # add Time
+                                    cell_name = 'G'+ str(new_row)
+                                    self.sheet.update_acell(cell_name, appt_obj[0][8])
 
-            pf_obj = session.execute("select * from pf_appt_report where visit_id = '"+str(visit_obj[0])+"'")
-            pf_obj = pf_obj.fetchall()
+                                    # add Type
+                                    visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0])+"'")
+                                    visit_obj = visit_obj.fetchone()
 
-            cell_name = 'H'+ str(new_row)
-            self.sheet.update_acell(cell_name,pf_obj[0][10])
+                                    pf_obj = session.execute("select * from pf_appt_report where visit_id = '"+str(visit_obj[0])+"'")
+                                    pf_obj = pf_obj.fetchall()
 
-            #add status
-            intake_obj = session.execute("select * from intake where visit_id = '"+str(visit_obj[0])+"'")
-            intake_obj = intake_obj.fetchall()
+                                    if pf_obj:
+                                        cell_name = 'H'+ str(new_row)
+                                        self.sheet.update_acell(cell_name,pf_obj[0][10])
 
-            cell_name = 'I'+ str(new_row)
-            self.sheet.update_acell(cell_name,intake_obj[0][2])
+                                        #add status
+                                        intake_obj = session.execute("select * from intake where visit_id = '"+str(visit_obj[0])+"'")
+                                        intake_obj = intake_obj.fetchall()
 
-            if 'New' in pf_obj[0][10] and intake_obj[0][2]=='sent':
-                add1 = 'Before your visit please try to complete the patient intake sent to your email.'
-                cell_name = 'J'+ str(new_row)
-                self.sheet.update_acell(cell_name,add1)
+                                        cell_name = 'I'+ str(new_row)
+                                        self.sheet.update_acell(cell_name,intake_obj[0][2])
 
-            elif 'Follow' in pf_obj[0][10] and intake_obj[0][2]=='sent':
-                add2 = 'Before your visit please try to complete the patient followup document sent to your email.'
+                                        if 'New' in pf_obj[0][10] and intake_obj[0][2]=='sent':
+                                            add1 = 'Before your visit please try to complete the patient intake sent to your email.'
+                                            cell_name = 'J'+ str(new_row)
+                                            self.sheet.update_acell(cell_name,add1)
 
-                cell_name = 'K'+ str(new_row)
-                self.sheet.update_acell(cell_name,add2)
+                                        elif 'Follow' in pf_obj[0][10] and intake_obj[0][2]=='sent':
+                                            add2 = 'Before your visit please try to complete the patient followup document sent to your email.'
 
-            # int_session = Session(engine)
-            # int_session.execute("update patient set rc_flag='1' where id='"+str(patient_obj.id)+"'")
-            # int_session.commit()
-            # int_session.close()
+                                            cell_name = 'K'+ str(new_row)
+                                            self.sheet.update_acell(cell_name,add2)
 
-
+                                        int_session = Session(engine)
+                                        int_session.execute("update patient set rc_flag='1' where id='"+str(patient_ob.id)+"'")
+                                        int_session.commit()
+                                        int_session.close()
+                                        session.close()
 
     def login(self):
         # use creds to create a client to interact with the Google Drive API
