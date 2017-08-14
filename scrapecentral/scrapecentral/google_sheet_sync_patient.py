@@ -30,7 +30,7 @@ class GoogleSpreedSheetSync(object):
 
 	def __init__(self):
 		client = self.login()
-		self.sheet = client.open("C.Patients").sheet1
+		self.sheet = client.open("Patients").sheet1
 		self.sync_data_from_db(client)
 		self.sync_data_from_sheet(client)
 

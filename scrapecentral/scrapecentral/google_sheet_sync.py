@@ -29,7 +29,7 @@ class GoogleSpreedSheetSync(object):
 	def __init__(self):
 		client = self.login()
 
-		self.sheet = client.open("C.Scheduling").sheet1
+		self.sheet = client.open("Scheduling").sheet1
 		self.sync_data_from_db(client)
 		self.sync_data_from_sheet(client)
 
@@ -169,76 +169,84 @@ class GoogleSpreedSheetSync(object):
 				# name table
 				association = session.execute("select id from association where patient_id = '"+str(pt[0])+"'")
 				association = association.fetchone()
-				fname = row[1].split(' ')[0]
-				lname = row[1].split(' ')[1]
-				session.add(name(fname=fname,lname =lname, patient_id =pt[0], association_id = association[0]))
-				session.commit()
+				if len(row[1])>1:
+					fname = row[1].split(' ')[0]
+					lname = row[1].split(' ')[1]
+					session.add(name(fname=fname,lname =lname, patient_id =pt[0], association_id = association[0]))
+					session.commit()
 
 				# communication table
 				comm_session = Session(engine)
 				name_ob = session.execute("select id from name where association_id = '"+str(association[0])+"'")
 				name_ob = name_ob.fetchone()
-				comm_session.execute("insert into communication(name_id)values('"+str(name_ob[0])+"')")
-				comm_session.commit()
-				comm_session.close()
+				if name_ob:
+					comm_session.execute("insert into communication(name_id)values('"+str(name_ob[0])+"')")
+					comm_session.commit()
+					comm_session.close()
 
-				# phone table
-				communication = session.execute("select id from communication where name_id = '"+str(name_ob[0])+"'")
-				communication = communication.fetchone()
-				session.add(phone(phone_number=row[6], communication_id=communication[0]))
-				session.commit()
-
-				# email table
-				session.add(email(email=row[7], communication_id=communication[0]))
-				session.commit()
-
-				# medical table
-				session.add(medical(patient_id=pt[0]))
-				session.commit()
-
-				# appointment table
-				session.add(appointment(patient_id=pt[0]))
-				session.commit()
-
-				# record table
-				session.add(record(name_id=name_ob[0]))
-				session.commit()
-
-				# detail table
-				session.add(detail(name_id=name_ob[0]))
-				session.commit()
-
-				# condition table
-				medical = session.execute("select id from medical where patient_id = '"+str(pt[0])+"'")
-				medical = medical.fetchone()
-				session.add(condition(medical_id=medical[0]))
-				session.commit()
-
-				# qualify table
-				condition_obj = session.execute("select id from condition where medical_id = '"+str(medical[0])+"'")
-				condition_obj = condition_obj.fetchone()
-				session.add(qualify(name =row[8], type ='Not Specified',condition_id =condition_obj[0]))
-				session.commit()
-
-				# update REQUESTED ON
-				appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_id)+"'")
-				appointment_obj = appointment_obj.fetchone()
-
-				if appointment_obj:
-					session.add(book(appointment_id=appointment_obj[0]))
+					# phone table
+					communication = session.execute("select id from communication where name_id = '"+str(name_ob[0])+"'")
+					communication = communication.fetchone()
+					session.add(phone(phone_number=row[6], communication_id=communication[0]))
 					session.commit()
 
-					book_obj = session.execute("select id from book where appointment_id = '"+str(appointment_obj[0])+"'")
-					book_obj = book_obj.fetchone()
-
-					date_request1 = str(row[5]).split(';')[0]
-					date_request2 = str(row[5]).split(';')[1]
-
-					session.add(request_appt(requested_on=row[2],location=row[4],provider='Not Specified',type=row[3],date_request1=date_request1,date_request2=date_request2,pt_notes=row[10],book_id=book_obj[0]))
+					# email table
+					session.add(email(email=row[7], communication_id=communication[0]))
 					session.commit()
-					session.close()
 
-					print 'NEW USER ADDED TO THE DATABASE SUCCESSFULLY..'
+					# medical table
+					# session.add(medical(patient_id=pt[0]))
+					session.execute("insert into medical(patient_id)values('"+str(pt[0])+"')")
+					session.commit()
+
+					# appointment table
+					# session.add(appointment(patient_id=pt[0]))
+					session.execute("insert into appointment(patient_id)values('"+str(pt[0])+"')")
+					session.commit()
+
+					# record table
+					# session.add(record(name_id=name_ob[0]))
+					session.execute("insert into record(name_id)values('"+str(name_ob[0])+"')")
+					session.commit()
+
+					# detail table
+					# session.add(detail(name_id=name_ob[0]))
+					session.execute("insert into detail(name_id)values('"+str(name_ob[0])+"')")
+					session.commit()
+
+					# condition table
+					medical = session.execute("select id from medical where patient_id = '"+str(pt[0])+"'")
+					medical = medical.fetchone()
+					# session.add(condition(medical_id=medical[0]))
+					session.execute("insert into condition(medical_id)values('"+str(medical[0])+"')")
+					session.commit()
+
+					# qualify table
+					condition_obj = session.execute("select id from condition where medical_id = '"+str(medical[0])+"'")
+					condition_obj = condition_obj.fetchone()
+					session.add(qualify(name =row[8], type ='Not Specified',condition_id =condition_obj[0]))
+					session.commit()
+
+					# update REQUESTED ON
+					appointment_obj = session.execute("select id from appointment where patient_id = '"+str(pt[0])+"'")
+					appointment_obj = appointment_obj.fetchone()
+
+					if appointment_obj:
+						# session.add(book(appointment_id=appointment_obj[0]))
+						session.execute("insert into book(appointment_id)values('"+str(appointment_obj[0])+"')")
+						session.commit()
+
+						book_obj = session.execute("select id from book where appointment_id = '"+str(appointment_obj[0])+"'")
+						book_obj = book_obj.fetchone()
+
+						date_request1 = str(row[5]).split(';')[0]
+						date_request2 = str(row[5]).split(';')[1]
+
+						session.add(request_appt(requested_on=row[2],location=row[4],provider='Not Specified',type=row[3],date_request1=date_request1,date_request2=date_request2,pt_notes=row[10],book_id=book_obj[0]))
+						session.commit()
+						session.close()
+
+						print 'NEW USER ADDED TO THE DATABASE SUCCESSFULLY..'
 
 	def sync_data_from_db(self, client):
 

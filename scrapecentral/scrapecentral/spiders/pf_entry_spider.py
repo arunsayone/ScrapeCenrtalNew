@@ -108,222 +108,236 @@ class PFEntrySpider(scrapy.Spider):
 			patient_data = patient_data.fetchall()
 
 			social_sec_no = patient_data[0][8]
+			if association_obj:
+				name_obj = session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
+				name_obj = name_obj.fetchall()
 
-			name_obj = session.execute("select * from name where association_id = '"+str(association_obj[0])+"'")
-			name_obj = name_obj.fetchall()
+				md_id = patient_ob.id
+				firstName = ''
+				middleName  = ''
+				lastName = ''
+				if name_obj:
+					firstName = name_obj[0][2]
+					middleName = name_obj[0][3]
+					lastName = name_obj[0][4]
 
-			md_id = patient_ob.id
-			firstName = ''
-			middleName  = ''
-			lastName = ''
-			if name_obj:
-				firstName = name_obj[0][2]
-				middleName = name_obj[0][3]
-				lastName = name_obj[0][4]
+					detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
+					detail_obj = detail_obj.fetchone()
+					if detail_obj:
+						dmo_obj = session.execute("select * from demographic_detail where detail_id = '"+str(detail_obj[0])+"'")
+						dmo_obj = dmo_obj.fetchall()
+						age = 'No age'
+						if dmo_obj:
+							if len(dmo_obj[0]) > 3:
+								dob = dmo_obj[0][3]
+								sex = dmo_obj[0][2]
+								age = dmo_obj[0][1]
+								marital_status = dmo_obj[0][4]
+								ethnicity = dmo_obj[0][5]
+								pre_lang = dmo_obj[0][6]
+								race = dmo_obj[0][8]
+							else:
+								dob = 'No Dob'
+								sex = 'No sex'
 
-			detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
-			detail_obj = detail_obj.fetchone()
-
-			dmo_obj = session.execute("select * from demographic_detail where detail_id = '"+str(detail_obj[0])+"'")
-			dmo_obj = dmo_obj.fetchall()
-			dob = dmo_obj[0][3]
-			sex = dmo_obj[0][2]
-			if 'f' in sex:
-				gender  = '1'
-			else:
-				gender = '0'
-			age = dmo_obj[0][1]
-			marital_status = dmo_obj[0][4]
-			ethnicity = dmo_obj[0][5]
-			pre_lang = dmo_obj[0][6]
-			race = dmo_obj[0][8]
-
-			#Format date
-			if ', ' in dob:
-				date_of_birth = dob.replace(', ',' ')
-				dt_obj = datetime.strptime(date_of_birth, '%b %d %Y')
-				dob= str(dt_obj.month)+'/'+str(dt_obj.day)+'/'+str(dt_obj.year)
-			else:
-				dob = dob
-
-			#  PHONE
-			communication_obj = session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
-			communication_obj = communication_obj.fetchone()
-
-			phone_obj = session.execute("select * from phone where communication_id = '"+str(communication_obj[0])+"'")
-			phone_obj = phone_obj.fetchall()
-			mobilePhone = phone_obj[0][1]
-			home = phone_obj[0][7]
-			work = phone_obj[0][8]
-			cell = phone_obj[0][9]
-			phone_secondary = phone_obj[0][6]
-
-			# EMAIL
-			email_obj = session.execute("select * from email where communication_id = '"+str(communication_obj[0])+"'")
-			email_obj = email_obj.fetchall()
-			emailAddress = email_obj[0][1]
-
-			address_obj = session.execute("select * from address where communication_id = '"+str(communication_obj[0])+"'")
-			address_obj = address_obj.fetchall()
-
-			mobilePhoneCountry = ''
-			isUserOfMobilePhone = ''
-			isUserOfEmail = ''
-			streetAddress1 = address_obj[0][1]
-			streetAddress2 = ''
-			postalCode = address_obj[0][6]
-			# city = address_obj[0][4]
-			# state = address_obj[0][5]
-
-			full_name = name_obj[0][2]+' '+name_obj[0][3]+' '+name_obj[0][4]
-			# primaryAddress = {  "streetAddress1":streetAddress1,
-			#                     "streetAddress2":streetAddress2,
-			#                      "postalCode":postalCode,
-			#                      "city":city,
-			#                      "state":state
-			# }
+							if 'f' in sex:
+								gender  = '1'
+							else:
+								gender = '0'
 
 
-			# isOptedInToMobilePhoneMessaging = ''
-			# isOptedInToEmailMessaging = ''
-			# isOptedInToVoiceMessaging = ''
-			# allowDuplicatePatientIdentifier = ''
-			# allowDuplicatePatientRecordNumber = ''
-			# comments = ''
-			# isActive = ''
-			# appointmentRemindersEnabled = ''
-			# isFakePatient = ''
-			# raceOptions = ''
+							#Format date
+							if ', ' in dob:
+								date_of_birth = dob.replace(', ',' ')
+								dt_obj = datetime.strptime(date_of_birth, '%b %d %Y')
+								dob= str(dt_obj.month)+'/'+str(dt_obj.day)+'/'+str(dt_obj.year)
+							else:
+								dob = dob
 
-			# patientPreferences = {
+							#  PHONE
+							communication_obj = session.execute("select id from communication where name_id = '"+str(name_obj[0][0])+"'")
+							communication_obj = communication_obj.fetchone()
 
-			# }
-			# patientSocialHistory = {
+							phone_obj = session.execute("select * from phone where communication_id = '"+str(communication_obj[0])+"'")
+							phone_obj = phone_obj.fetchall()
+							if phone_obj:
+								mobilePhone = phone_obj[0][1]
+								home = phone_obj[0][7]
+								work = phone_obj[0][8]
+								cell = phone_obj[0][9]
+								phone_secondary = phone_obj[0][6]
 
-			# }
+								# EMAIL
+								email_obj = session.execute("select * from email where communication_id = '"+str(communication_obj[0])+"'")
+								email_obj = email_obj.fetchall()
+								if email_obj:
+									emailAddress = email_obj[0][1]
 
-			# session.execute("update patient set pf_entry_flag='1' where id='"+str(patient_ob.id)+"'")
-			# session.commit()
+									address_obj = session.execute("select * from address where communication_id = '"+str(communication_obj[0])+"'")
+									address_obj = address_obj.fetchall()
 
-			#search with name
-			name = full_name+middleName+lastName
-			search_url = "https://static.practicefusion.com/PatientEndpoint/api/v1/patients/search"
+									mobilePhoneCountry = ''
+									isUserOfMobilePhone = ''
+									isUserOfEmail = ''
+									streetAddress1 = address_obj[0][1]
+									streetAddress2 = ''
+									postalCode = address_obj[0][6]
+									# city = address_obj[0][4]
+									# state = address_obj[0][5]
 
-			search_payload = {"matchAll":"true","firstOrLastName":name}
-			search_headers = {
-				'authorization': session_tkn,
-				'content-type': "application/json; charset=UTF-8",
-				'cache-control': "no-cache",
-				}
+									full_name = name_obj[0][2]+' '+name_obj[0][3]+' '+name_obj[0][4]
+									# primaryAddress = {  "streetAddress1":streetAddress1,
+									#                     "streetAddress2":streetAddress2,
+									#                      "postalCode":postalCode,
+									#                      "city":city,
+									#                      "state":state
+									# }
 
-			search_response = requests.request("POST", search_url, data=json.dumps(search_payload), headers=search_headers)
-			search_response = json.loads(search_response.text)
 
-			#get city and state from zip
-			url = "https://static.practicefusion.com/PracticeEndpoint/api/v1/PostalCodeCityStateProvince/11552"
-			headers = {
-				'authorization': session_tkn,
-				'cache-control': "no-cache",
-				}
+									# isOptedInToMobilePhoneMessaging = ''
+									# isOptedInToEmailMessaging = ''
+									# isOptedInToVoiceMessaging = ''
+									# allowDuplicatePatientIdentifier = ''
+									# allowDuplicatePatientRecordNumber = ''
+									# comments = ''
+									# isActive = ''
+									# appointmentRemindersEnabled = ''
+									# isFakePatient = ''
+									# raceOptions = ''
 
-			zip_response = requests.request("GET", url, headers=headers)
-			zip_response = json.loads(zip_response.text)
-			city = zip_response["city"]
-			state = zip_response["stateProvince"]
+									# patientPreferences = {
 
-			if not search_response["patients"]:
-				save_url = "https://static.practicefusion.com/PatientEndpoint/api/v1/patients"
-				save_payload =   {"patient":
-								{"generateNewPatientIdentifier":"true",
-								"generateNewPatientRecordNumber":"true",
-								"firstName":firstName,
-								"lastName":lastName,
-								"birthDate":dob,
-								"gender":gender,
-								"age":age,
-								"mobilePhone":mobilePhone,
-								"mobilePhoneCountry":"USA",
-								"isUserOfMobilePhone":"true",
-								"emailAddress":emailAddress,
-								"isUserOfEmail":"true",
-								"isOptedInToMobilePhoneMessaging":"false",
-								"isOptedInToEmailMessaging":"false",
-								"isOptedInToVoiceMessaging":"false",
-								"allowDuplicatePatientIdentifier":"false",
-								"allowDuplicatePatientRecordNumber":"false",
-								"isActive":"true",
-								"appointmentRemindersEnabled":"false",
-								"isFakePatient":"false",
-								"raceOptions":"[]",
-								"primaryAddress":
-									{"streetAddress1":streetAddress1,
-									"streetAddress2":streetAddress2,
-									"postalCode":postalCode,
-									"city":city,
-									"state":state
-									}
-								},
-							"patientPreferences":"{}",
-							"patientSocialHistory":"{}",
-							"allowDuplicatePatientRecordNumber":"false",
-							}
+									# }
+									# patientSocialHistory = {
 
-				# payload = {"patient":
-				# 				{"patientGuid":"9709409e-92b9-401ca797-3a0704d09dc0",
-				# 				"patientID":md_id,
-				# 				"patientRecordNumber":"AA644041",
-				# 				"generateNewPatientIdentifier":"false",
-				# 				"generateNewPatientRecordNumber":"false",
-				# 				"practiceGuid":"b4aaf54f-d06a-49fe-a0d1-ddc6f16cbfdf",
-				# 				"firstName":firstName,
-				# 				"lastName":lastName,
-				# 				"birthDate":dob,
-				# 				"deathDate":"",
-				# 				"gender":gender,
-				# 				"age":age,
-				# 				"mobilePhone":mobilePhone,
-				# 				"mobilePhoneCountry":"",
-				# 				"isUserOfMobilePhone":"true",
-				# 				"emailAddress":emailAddress,
-				# 				"isUserOfEmail":"true",
-				# 				"isOptedInToMobilePhoneMessaging":"false",
-				# 				"isOptedInToEmailMessaging":"false",
-				# 				"isOptedInToVoiceMessaging":"false",
-				# 				"allowDuplicatePatientIdentifier":"false",
-				# 				"allowDuplicatePatientRecordNumber":"false",
-				# 				"mothersMaidenName":"",
-				# 				"comments":"",
-				# 				"isActive":"true",
-				# 				"appointmentRemindersEnabled":"false",
-				# 				"immunizationProtectionTypeID":"1",
-				# 				"mostRecentVisitDate":"0001-01-01T00:00:00Z",
-				# 				"mostRecentVisitTranscriptGuid":"00000000-0000-0000-0000-000000000000",
-				# 				"isFakePatient":"false",
-				# 				"externalPatientGuid":"0c106af9-ea4b-4d2f-bed3-d82beca6b886",
-				# 				"raceOptions":"[9]",
-				# 				"primaryAddress":
-				# 					{"streetAddress1":streetAddress1,
-				# 					"streetAddress2":streetAddress2,
-				# 					"postalCode":postalCode,
-				# 					"city":city,
-				# 					"state":state
-				# 					}
-				# 				},
-				# 			"patientPreferences":"{}",
-				# 			"patientContacts":"[]",
-				# 			"patientSocialHistory":"{}",
-				# 			"allowDuplicatePatientRecordNumber":"false",
-				# 			"generateNewPatientRecordNumber":"false"
-				# 			}
-				save_headers = {
-					'authorization': session_tkn,
-					'content-type': "application/json",
-					'cache-control': "no-cache",
-					}
+									# }
 
-				response = requests.request("POST", save_url, data=json.dumps(save_payload), headers=save_headers)
+									# session.execute("update patient set pf_entry_flag='1' where id='"+str(patient_ob.id)+"'")
+									# session.commit()
 
-				print 'Saved data.....',response.text,'\n\n',response.status_code
+									#search with name
+									name = full_name+middleName+lastName
+									search_url = "https://static.practicefusion.com/PatientEndpoint/api/v1/patients/search"
+
+									search_payload = {"matchAll":"true","firstOrLastName":name}
+									search_headers = {
+										'authorization': session_tkn,
+										'content-type': "application/json; charset=UTF-8",
+										'cache-control': "no-cache",
+										}
+
+									search_response = requests.request("POST", search_url, data=json.dumps(search_payload), headers=search_headers)
+									search_response = json.loads(search_response.text)
+
+									#get city and state from zip
+									url = "https://static.practicefusion.com/PracticeEndpoint/api/v1/PostalCodeCityStateProvince/11552"
+									headers = {
+										'authorization': session_tkn,
+										'cache-control': "no-cache",
+										}
+
+									zip_response = requests.request("GET", url, headers=headers)
+									zip_response = json.loads(zip_response.text)
+									city = zip_response["city"]
+									state = zip_response["stateProvince"]
+
+									if not search_response["patients"]:
+										save_url = "https://static.practicefusion.com/PatientEndpoint/api/v1/patients"
+										save_payload =   {"patient":
+														{"generateNewPatientIdentifier":"true",
+														"generateNewPatientRecordNumber":"true",
+														"firstName":firstName,
+														"lastName":lastName,
+														"birthDate":dob,
+														"gender":gender,
+														"age":age,
+														"mobilePhone":mobilePhone,
+														"mobilePhoneCountry":"USA",
+														"isUserOfMobilePhone":"true",
+														"emailAddress":emailAddress,
+														"isUserOfEmail":"true",
+														"isOptedInToMobilePhoneMessaging":"false",
+														"isOptedInToEmailMessaging":"false",
+														"isOptedInToVoiceMessaging":"false",
+														"allowDuplicatePatientIdentifier":"false",
+														"allowDuplicatePatientRecordNumber":"false",
+														"isActive":"true",
+														"appointmentRemindersEnabled":"false",
+														"isFakePatient":"false",
+														"raceOptions":"[]",
+														"primaryAddress":
+															{"streetAddress1":streetAddress1,
+															"streetAddress2":streetAddress2,
+															"postalCode":postalCode,
+															"city":city,
+															"state":state
+															}
+														},
+													"patientPreferences":"{}",
+													"patientSocialHistory":"{}",
+													"allowDuplicatePatientRecordNumber":"false",
+													}
+
+										# payload = {"patient":
+										# 				{"patientGuid":"9709409e-92b9-401ca797-3a0704d09dc0",
+										# 				"patientID":md_id,
+										# 				"patientRecordNumber":"AA644041",
+										# 				"generateNewPatientIdentifier":"false",
+										# 				"generateNewPatientRecordNumber":"false",
+										# 				"practiceGuid":"b4aaf54f-d06a-49fe-a0d1-ddc6f16cbfdf",
+										# 				"firstName":firstName,
+										# 				"lastName":lastName,
+										# 				"birthDate":dob,
+										# 				"deathDate":"",
+										# 				"gender":gender,
+										# 				"age":age,
+										# 				"mobilePhone":mobilePhone,
+										# 				"mobilePhoneCountry":"",
+										# 				"isUserOfMobilePhone":"true",
+										# 				"emailAddress":emailAddress,
+										# 				"isUserOfEmail":"true",
+										# 				"isOptedInToMobilePhoneMessaging":"false",
+										# 				"isOptedInToEmailMessaging":"false",
+										# 				"isOptedInToVoiceMessaging":"false",
+										# 				"allowDuplicatePatientIdentifier":"false",
+										# 				"allowDuplicatePatientRecordNumber":"false",
+										# 				"mothersMaidenName":"",
+										# 				"comments":"",
+										# 				"isActive":"true",
+										# 				"appointmentRemindersEnabled":"false",
+										# 				"immunizationProtectionTypeID":"1",
+										# 				"mostRecentVisitDate":"0001-01-01T00:00:00Z",
+										# 				"mostRecentVisitTranscriptGuid":"00000000-0000-0000-0000-000000000000",
+										# 				"isFakePatient":"false",
+										# 				"externalPatientGuid":"0c106af9-ea4b-4d2f-bed3-d82beca6b886",
+										# 				"raceOptions":"[9]",
+										# 				"primaryAddress":
+										# 					{"streetAddress1":streetAddress1,
+										# 					"streetAddress2":streetAddress2,
+										# 					"postalCode":postalCode,
+										# 					"city":city,
+										# 					"state":state
+										# 					}
+										# 				},
+										# 			"patientPreferences":"{}",
+										# 			"patientContacts":"[]",
+										# 			"patientSocialHistory":"{}",
+										# 			"allowDuplicatePatientRecordNumber":"false",
+										# 			"generateNewPatientRecordNumber":"false"
+										# 			}
+										save_headers = {
+											'authorization': session_tkn,
+											'content-type': "application/json",
+											'cache-control': "no-cache",
+											}
+
+										response = requests.request("POST", save_url, data=json.dumps(save_payload), headers=save_headers)
+
+										# set schedule_flag
+										session.execute("update patient set pf_entry_flag='1' where id='"+str(patient_ob.id)+"'")
+										session.commit()
+										print 'Saved data.....',response.text,'\n\n',response.status_code
+		session.close()
 
 	def convert_date(self,date):
 		"""

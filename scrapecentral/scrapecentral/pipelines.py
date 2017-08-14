@@ -225,6 +225,7 @@ class ScrapecentralPipeline(object):
 			session.add(pf_appt_report(visit_id= visit_obj[0]))
 			session.commit()
 
+			print "MD data Saved to DB"
 
 		if spider.name == 'rc':
 
@@ -277,47 +278,50 @@ class ScrapecentralPipeline(object):
 			for patient_ob in patients_obj:
 				name_obj = session.execute("select * from name where patient_id = '"+str(patient_ob.id)+"'")
 				name_obj = name_obj.fetchall()
-				db_pt_name = name_obj[0][2]+' '+name_obj[0][4]
+				if name_obj:
+					db_pt_name = name_obj[0][2]+' '+name_obj[0][4]
 
-				detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
-				detail_obj = detail_obj.fetchall()
+					detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
+					detail_obj = detail_obj.fetchall()
 
-				demographic_obj = session.execute("select * from demographic_detail where detail_id = '"+str(detail_obj[0][0])+"'")
-				demographic_obj = demographic_obj.fetchall()
-				if demographic_obj:
-					dob = demographic_obj[0][3]
-					db_pt_dob = self.convert_date(unicodedata.normalize('NFKD',dob).encode('ascii','ignore'))
+					if detail_obj:
+						demographic_obj = session.execute("select * from demographic_detail where detail_id = '"+str(detail_obj[0][0])+"'")
+						demographic_obj = demographic_obj.fetchall()
+						if demographic_obj:
+							dob = demographic_obj[0][3]
+							db_pt_dob = self.convert_date(unicodedata.normalize('NFKD',dob).encode('ascii','ignore'))
 
-					print 'SITE NAME...',site_pt_name,'\nDB NAME...',db_pt_name,'\nSITE DOB...',site_pt_dob,'\nDB DOB...',db_pt_dob
-					if site_pt_name == db_pt_name and site_pt_dob == db_pt_dob:
-						try:
-							appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
-							appointment_obj = appointment_obj.fetchall()
-						except:
-							session.add(appointment(patient_id=patient_ob.id))
-							session.commit()
-							appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
-							appointment_obj = appointment_obj.fetchone()
+							print 'PATIENT SITE NAME...',site_pt_name,'\nPATIENT DB NAME...',db_pt_name,'\nPATIENT SITE DOB...',site_pt_dob,'\nPATIENT DB DOB...',db_pt_dob
+							if site_pt_name == db_pt_name and site_pt_dob == db_pt_dob:
+								try:
+									appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
+									appointment_obj = appointment_obj.fetchall()
+								except:
+									session.add(appointment(patient_id=patient_ob.id))
+									session.commit()
+									appointment_obj = session.execute("select id from appointment where patient_id = '"+str(patient_ob.id)+"'")
+									appointment_obj = appointment_obj.fetchone()
 
-						try:
-							visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0])+"'")
-							visit_obj = visit_obj.fetchall()
-						except:
-							session.add(visit(appointment_id=appointment_obj[0][0]))
-							session.commit()
-							visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0][0])+"'")
-							visit_obj = visit_obj.fetchone()
+								try:
+									visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0])+"'")
+									visit_obj = visit_obj.fetchall()
+									visit_id = visit_obj[0][0]
+								except:
+									session.add(visit(appointment_id=appointment_obj[0][0]))
+									session.commit()
+									visit_obj = session.execute("select id from visit where appointment_id = '"+str(appointment_obj[0][0])+"'")
+									visit_obj = visit_obj.fetchone()
+									visit_id = visit_obj[0]
 
-						visit_id = visit_obj[0][0]
-						# pf table
-						session.add(pf_appt_report(date=item["pf_date"],time=item["pf_time"],status=item["pf_status"],patient_name=item["pf_patient_name"],patient_dob=item["pf_patient_dob"],facility=item["pf_facility"],appointment_type =item["pf_appointment_type"] ,visit_id= visit_id))
-						session.commit()
+								# pf table
+								session.add(pf_appt_report(date=item["pf_date"],time=item["pf_time"],status=item["pf_status"],patient_name=item["pf_patient_name"],patient_dob=item["pf_patient_dob"],facility=item["pf_facility"],appointment_type =item["pf_appointment_type"] ,visit_id= visit_id))
+								session.commit()
 
-						# int_session = Session(engine)
-						# int_session.execute("update patient set pf_flag='1' where id='"+str(patient_obj.id)+"'")
-						# int_session.commit()
-						# int_session.close()
-						print 'PATIENT UPDATED WITH SCRAPED DATA:...'
+								# int_session = Session(engine)
+								# int_session.execute("update patient set pf_flag='1' where id='"+str(patient_ob.id)+"'")
+								# int_session.commit()
+								# int_session.close()
+								print 'PATIENT UPDATED WITH SCRAPED DATA:...'
 
 		if spider.name == 'pf_download':
 
@@ -396,16 +400,16 @@ class ScrapecentralPipeline(object):
 			session.commit()
 
 			# medical table
-			session.add(medical(patient_id=item["pf_pt_id"]))
+			session.add(medical(patient_id=pt[0]))
 			session.commit()
 
 			#  appointment table
-			session.add(appointment(patient_id=item["pf_pt_id"]))
+			session.add(appointment(patient_id=pt[0]))
 			session.commit()
 
 
 			# condition table
-			medical = session.execute("select id from medical where patient_id = '"+str(item["pf_pt_id"])+"'")
+			medical = session.execute("select id from medical where patient_id = '"+str(pt[0])+"'")
 			medical = medical.fetchone()
 			session.add(condition(medical_id=medical[0]))
 			session.commit()
@@ -417,7 +421,7 @@ class ScrapecentralPipeline(object):
 			session.commit()
 
 			# remind table
-			appointment_obj = session.execute("select id from appointment where patient_id = '"+str(item["pf_pt_id"])+"'")
+			appointment_obj = session.execute("select id from appointment where patient_id = '"+str(pt[0])+"'")
 			appointment_obj = appointment_obj.fetchone()
 			session.add(remind(appointment_id=appointment_obj[0]))
 			session.commit()

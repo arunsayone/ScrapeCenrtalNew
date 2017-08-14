@@ -322,20 +322,29 @@ class MDSpider(scrapy.Spider):
 
         # Do you currently have insurance?
         insurance = doc.xpath('//div[@class="patient-details"]/div/dl/dl/h4[text()="Do you currently have insurance?"]')
-        ins_name = insurance[0].xpath('./following-sibling::p/text()')[0]
-        prescribed = insurance[0].xpath('./following-sibling::p/text()')[1]
-        item['ins_name'] =ins_name
-        item['prescribed'] =prescribed
+        if insurance:
+            ins_name = insurance[0].xpath('./following-sibling::p/text()')[0]
+            prescribed = insurance[0].xpath('./following-sibling::p/text()')[1]
+            item['ins_name'] =ins_name
+            item['prescribed'] =prescribed
+        else:
+            item['ins_name'] ="Not specified"
+            item['prescribed'] ="Not prescribed"
 
         # Are you currently taking any prescriptions?
         taking_any_prescriptions = doc.xpath('//div[@class="patient-details"]/div/dl/dl/h4[text()="Are you currently taking any prescriptions?"]')
-        prescription_meds = taking_any_prescriptions[0].xpath('./following-sibling::p/text()')[0]
-        item['prescription_meds'] = prescription_meds
+        if taking_any_prescriptions:
+            prescription_meds = taking_any_prescriptions[0].xpath('./following-sibling::p/text()')[0]
+            if prescription_meds:
+                item['prescription_meds'] = prescription_meds
+            else:
+                item['prescription_meds'] = "Not given"
 
         # Do you have a secondary phone number where you can be reached?
         second_phone = doc.xpath('//div[@class="patient-details"]/div/dl/dl/h4[text()="Do you have a secondary phone number where you can be reached?"]')
-        phone2 = second_phone[0].xpath('./following-sibling::p/text()')[1]
-        item['phone2'] = phone2
+        if second_phone:
+            phone2 = second_phone[0].xpath('./following-sibling::p/text()')[1]
+            item['phone2'] = phone2
         # fieldnames = [item['drug_arrest'], item['DOB']]
 
         # Others

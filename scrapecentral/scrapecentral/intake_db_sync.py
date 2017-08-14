@@ -33,7 +33,7 @@ class GoogleSpreedSheetSync(object):
 	def __init__(self):
 		client = self.login()
 
-		self.sheet = client.open("sql").sheet1
+		self.sheet = client.open("1.2(Responses)").sheet1
 		self.sync_data_to_db(client)
 
 	def sync_data_to_db(self, client):
@@ -69,7 +69,6 @@ class GoogleSpreedSheetSync(object):
 
 					detail_obj = session.execute("select id from detail where name_id = '"+str(name_obj[0][0])+"'")
 					if detail_obj:
-						print '....................../t',detail_obj
 						dt_id = detail_obj.fetchone()[0]
 
 						demographic_obj = session.execute("select * from demographic_detail where detail_id = '"+str(dt_id)+"'")
